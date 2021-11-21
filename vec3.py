@@ -25,6 +25,24 @@ class Vec3():
             return Vec3(self.x * other.x, self.y * other.y, self.z * other.z)
         else:
             return Vec3(self.x * other, self.y * other, self.z * other)
+    
+    def __iadd__(self, other):
+        if isinstance(other, Vec3):
+            return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+        else:
+            return Vec3(self.x + other, self.y + other, self.z + other)
+
+    def __isub__(self, other):
+        if isinstance(other, Vec3):
+            return Vec3(self.x - other.x, self.y - other.y, self.z - other.z)
+        else:
+            return Vec3(self.x - other, self.y - other, self.z - other)
+
+    def __imul__(self, other):
+        if isinstance(other, Vec3):
+            return Vec3(self.x * other.x, self.y * other.y, self.z * other.z)
+        else:
+            return Vec3(self.x * other, self.y * other, self.z * other)
 
     def __pow__(self, exp):
         if isinstance(exp, float) or isinstance(exp,int):
@@ -60,6 +78,25 @@ class Vec3():
             self.z = data
         else:
             raise Exception('Vec3 index out of range')
+
+    def __abs__(self):
+        return Vec3(abs(self.x), abs(self.y), abs(self.z))
+
+    def __round__(self):
+        return Vec3(round(self.x), round(self.y), round(self.z))
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
+    def __ne__(self, other):
+        return self.x != other.x or self.y != other.y or self.z != other.z
+
+    def to_int(self):
+        return Vec3(int(self.x), int(self.y), int(self.z))
+
+    def to_float(self):
+        return Vec3(float(self.x), float(self.y), float(self.z))
+    
 
 def vec3_from_string(str1, str2, str3):
     x = float(str1)
