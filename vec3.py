@@ -2,10 +2,21 @@ import numpy
 
 # class for 3-vector objects
 class Vec3():
-    def __init__(self, x=0., y=0., z=0.):
-        self.x = x
-        self.y = y
-        self.z = z
+    def __init__(self, *args):
+        if len(args) > 3 or len(args) == 2:
+            raise Exception("Invalid number of arguments to Vec3 constructor")
+        elif len(args) == 0:
+            self.x = 0.
+            self.y = 0.
+            self.z = 0.
+        elif len(args) == 1:
+            self.x = args[0]
+            self.y = args[0]
+            self.z = args[0]
+        else:
+            self.x = args[0]
+            self.y = args[1]
+            self.z = args[2]
 
     def __str__(self):
         return '{{{self.x}, {self.y}, {self.z}}}'.format(self=self)
