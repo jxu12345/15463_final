@@ -1,3 +1,5 @@
+import numpy
+
 # class for 3-vector objects
 class Vec3():
     def __init__(self, x=0., y=0., z=0.):
@@ -96,6 +98,9 @@ class Vec3():
 
     def to_float(self):
         return Vec3(float(self.x), float(self.y), float(self.z))
+    
+    def to_np_array(self):
+        return numpy.array([self.x, self.y, self.z])
     
 
 def vec3_from_string(str1, str2, str3):
