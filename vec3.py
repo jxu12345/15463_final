@@ -9,14 +9,17 @@ class Vec3():
             self.x = 0.
             self.y = 0.
             self.z = 0.
-        elif len(args) == 1:
+        elif len(args) == 1 and (isinstance(args[0], float) or isinstance(args[0], int)):
             self.x = args[0]
             self.y = args[0]
             self.z = args[0]
-        else:
+        elif (isinstance(args[0], float) and isinstance(args[1], float) and isinstance(args[2], float)) or
+            (isinstance(args[0], int) and isinstance(args[1], int) and isinstance(args[2], int)):
             self.x = args[0]
             self.y = args[1]
             self.z = args[2]
+        else:
+            raise Exception("Invalid argument types to Vec3 constructor")
 
     def __str__(self):
         return '{{{self.x}, {self.y}, {self.z}}}'.format(self=self)
