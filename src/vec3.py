@@ -13,8 +13,8 @@ class Vec3():
             self.x = args[0]
             self.y = args[0]
             self.z = args[0]
-        elif (isinstance(args[0], float) and isinstance(args[1], float) and isinstance(args[2], float)) or
-            (isinstance(args[0], int) and isinstance(args[1], int) and isinstance(args[2], int)):
+        elif ((isinstance(args[0], float) and isinstance(args[1], float) and isinstance(args[2], float)) or
+            (isinstance(args[0], int) and isinstance(args[1], int) and isinstance(args[2], int))):
             self.x = args[0]
             self.y = args[1]
             self.z = args[2]

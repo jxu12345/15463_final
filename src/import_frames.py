@@ -1,9 +1,11 @@
 from skimage import io
 import vec3
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 # integrate a gyro array
-def integrate_gyro(gyro_vel, dt):
-    pass
+def integrate_gyro(gyro_vels, dt):
+    assert(len(gyro_vels) == len(dt))
     # pseudocode:
     # initialize rotation matrix array and angular position array
     # set rotation matrix to first position to identity
@@ -13,8 +15,15 @@ def integrate_gyro(gyro_vel, dt):
     #   Add scaled rotated angular velocity to angular position in previous timestamp
     #   Store result in current timestamp
     #   Get rotation matrix of current timestamp by transforming Euler angles to matrix
-    
-        
+
+    rot_mat = [R.from_euler('xyz', np.zeros(3))]
+    ang_pos = [np.zeros(3)]
+    for i in range(1, len(gyro_vels)):
+        rot_amt = (rot_mat[i-1].as_matrix() @ gyro_vels[i-1]) * dt[i]
+        ang_pos[i] = ang_pos[i-1] + rot_amt
+        rot_mat.append(R.from_euler('xyz', ang_pos[i]).as_matrix())
+
+    return rot_mat, ang_pos
 
 # integrate accelerometer array twice to get position
 # TODO: take into account gravity on every integration, for frames taken in portrait mode
@@ -22,11 +31,6 @@ def integrate_gyro(gyro_vel, dt):
 # y axis points towards top of screen (measures gravity)
 # z axis points outwards towards back of phone
 
-
- 
-
-
-    
 
 # class for an image and its corresponding time
 class IMUFrame():
@@ -79,5 +83,5 @@ class IMUFrame():
 
 if __name__ == "__main__":
     a = IMUFrame("data/parse_test", 6)
-    vec3.print_list(a.gyro)
+    vec3.print_list(a.dt)
     
