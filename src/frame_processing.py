@@ -73,8 +73,8 @@ class IMUFrame():
         # subtract mean gravity vector from accel data
         self.accel[:,1] -= mean_g
         # calculate rotation angle relative to ground, using first z axis value to check if pos or neg
-        theta = np.arccos(mean_g / g) * (-1 if self.accel[0,2] > 0 else 1)
-        # calculate amount to subtract on orthogonal axis (z)
+        theta = np.arccos(-mean_g / g) * (-1 if self.accel[0,2] > 0 else 1)
+        # calculate amount to offset from orthogonal axis (z)
         self.accel[:,2] -= np.sin(theta) * g
         
         # calculate starting orientation

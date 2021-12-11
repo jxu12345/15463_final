@@ -63,6 +63,22 @@ def A_t_from_H_t(height, width, H_t):
 
     return A_t.tocsr()
 
+# calculate the total warping matrix A for a given IMU frame
+def get_A (frame):
+    # get rotation and translation matrices
+    Q, T = frame.integrate_imus()
+    # initialize warping matrix
+    A = csr_matrix((frame.height*frame.width, frame.height*frame.width))
+    # iterate over all timestamps
+    for t in range(len(Q)):
+        # get homography matrix
+        H_t = calc_H_t(R.from_quat(Q[t]).as_matrix(), T[t])
+        # get warping matrix for current timestamp
+        A += A_t_from_H_t(frame.height, frame.width, H_t)
+        # add warping matrix to warping matrix
+
+    return A
+
 if __name__ == "__main__":
     # read test frame
     frame = f.IMUFrame("data/parse_test/", 5, compression=4)
@@ -75,4 +91,3 @@ if __name__ == "__main__":
 
     print(H_t)
     print(A_t)
-
