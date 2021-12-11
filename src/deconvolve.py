@@ -65,7 +65,7 @@ def A_t_from_H_t(height, width, H_t):
 
 if __name__ == "__main__":
     # read test frame
-    frame = f.IMUFrame("data/parse_test/", 5)
+    frame = f.IMUFrame("data/parse_test/", 5, compression=4)
     Q, pos = frame.integrate_imus()
 
     # compute homography matrix for time 5
@@ -75,33 +75,4 @@ if __name__ == "__main__":
 
     print(H_t)
     print(A_t)
-
-
-
-
-
-
-
-
-    
-
-    
-
-    
-
-
-if __name__ == '__main__':
-    frame = f.IMUFrame("data/parse_test/", 7)
-    Q, pos = f.integrate_imus(frame)
-
-    #compute rotation matrix and translation vector for given frame
-    R_t = R.from_quat(Q[-1]).as_matrix()
-    T_t = pos[-1]
-
-    #compute blur kernel matrix
-    K = np.eye(3)
-    
-    
-    H = calc_H_t(K, R_t, T_t)
-    print(H)
 

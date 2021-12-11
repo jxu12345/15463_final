@@ -14,8 +14,8 @@ g = 9.80665
 # z axis points outwards towards back of phone
 
 class IMUFrame():
-    def __init__(self, path, image_num):
-        self.image = io.imread(path + "/video_frames/frame%d.jpg" % image_num)
+    def __init__(self, path, image_num, compression=1):
+        self.image = io.imread(path + "/video_frames/frame%d.jpg" % image_num)[::compression, ::compression]
         self.height = self.image.shape[0]
         self.width = self.image.shape[1]
         
