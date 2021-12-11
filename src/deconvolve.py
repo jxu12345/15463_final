@@ -28,13 +28,14 @@ def A_t_from_H_t(height, width, H_t):
     # create sparse matrix
     A_t = lil_matrix((height*width, height*width))
     # iterate over all pixels, using x, y coordinates
-    for u0 in range(width):
-        for v0 in range(height):
-            print(u0, v0)
+    for ut in range(width):
+        for vt in range(height):
+            print(ut, vt)
             # get coordinates of pixel
-            orig_coords = np.array([[u0, v0, 1]]).T
-            # compute warped coordinates
-            u,v, _ = H_t @ orig_coords
+            warped_coords = np.array([[ut, vt, 1]]).T
+
+            # compute original coordinates, using inverse homography to map warped to original
+            u,v, _ = np.linalg.inv(H_t) @ warped_coords
 
             # find bilinear interpolation points
             u1 = int(np.floor(u))
@@ -42,6 +43,44 @@ def A_t_from_H_t(height, width, H_t):
 
             v1 = int(np.floor(v))
             v2 = int(np.ceil(v))
+
+            # check out of bounds
+            if u1 < 0 or u2 >= width or v1 < 0 or v2 >= height:
+                continue
+
+            # compute weights
+            w1 = (u2 - u) / (u2 - u1)
+            w2 = (u - u1) / (u2 - u1)
+
+            w3 = (v2 - v) / (v2 - v1)
+            w4 = (v - v1) / (v2 - v1)
+
+            # get indices of pixels
+            i1 = get_arr_ind(u1, v1, width)
+            i2 = get_arr_ind(u1, v2, width)
+            i3 = get_arr_ind(u2, v1, width)
+            i4 = get_arr_ind(u2, v2, width)
+
+            # add entries to sparse matrix
+            A_t[i1, i1] += w1 * w3
+            A_t[i1, i2] += w1 * w4
+            A_t[i1, i3] += w2 * w3
+            A_t[i1, i4] += w2 * w4
+
+            A_t[i2, i1] += w1 * w3
+            A_t[i2, i2] += w1 * w4
+            A_t[i2, i3] += w2 * w3
+            A_t[i2, i4] += w2 * w4
+
+            A_t[i3, i1] += w1 * w3
+            A_t[i3, i2] += w1 * w4
+            A_t[i3, i3] += w2 * w3
+            A_t[i3, i4] += w2 * w4
+
+            A_t[i4, i1] += w1 * w3
+            A_t[i4, i2] += w1 * w4
+            A_t[i4, i3] += w2 * w3
+            A_t[i4, i4] += w2 * w4
 
             # compute weights corresponding to points
             # current code does first interpolation in y direction, then in x direction
@@ -56,10 +95,10 @@ def A_t_from_H_t(height, width, H_t):
             # set weights in sparse matrix
             # index first into row and col for warped array index,
             # then into row and col for original image array indices
-            A_t[get_arr_ind(u, v, width), get_arr_ind(u1, v1, width)] = w[0]
-            A_t[get_arr_ind(u, v, width), get_arr_ind(u1, v2, width)] = w[1]
-            A_t[get_arr_ind(u, v, width), get_arr_ind(u2, v1, width)] = w[2]
-            A_t[get_arr_ind(u, v, width), get_arr_ind(u2, v2, width)] = w[3]
+            A_t[get_arr_ind(ut, vt, width), get_arr_ind(u1, v1, width)] = w[0]
+            A_t[get_arr_ind(ut, vt, width), get_arr_ind(u1, v2, width)] = w[1]
+            A_t[get_arr_ind(ut, vt, width), get_arr_ind(u2, v1, width)] = w[2]
+            A_t[get_arr_ind(ut, vt, width), get_arr_ind(u2, v2, width)] = w[3]
 
     return A_t.tocsr()
 
@@ -86,8 +125,8 @@ if __name__ == "__main__":
 
     # compute homography matrix for time 5
     H_t = calc_H_t(R.from_quat(Q[4]).as_matrix(), pos[4])
-    # compute warp matrix for time 5
-    A_t = A_t_from_H_t(frame.height, frame.width, H_t)
-
     print(H_t)
-    print(A_t)
+    print(np.linalg.inv(H_t) @ np.array([[180,210,1]]).T)
+    # compute warp matrix for time 5
+    # A_t = A_t_from_H_t(frame.height, frame.width, H_t)
+    # print(A_t)
