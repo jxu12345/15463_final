@@ -16,6 +16,8 @@ g = 9.80665
 class IMUFrame():
     def __init__(self, path, image_num):
         self.image = io.imread(path + "/video_frames/frame%d.jpg" % image_num)
+        self.height = self.image.shape[0]
+        self.width = self.image.shape[1]
         
         # get csv line corresponding to the image frame
         with open(path + "/movie_metadata.csv") as times:
@@ -77,6 +79,36 @@ class IMUFrame():
         
         # calculate starting orientation
         self.start_rot = R.from_rotvec([theta,0,0])
+    
+    # integrate quaternion orientations and positions from an IMU frame
+    def integrate_imus(self, graph=False):
+        for i in range(1, 10):
+            integrator = Madgwick(Dt=self.dt)
+            # example code provided by Python AHRS library
+            Q = np.tile([1., 0., 0., 0.], (len(self.gyro), 1)) # Allocate for quaternions
+            Q[0] = self.start_rot.as_quat() # Initial quaternion value 
+            # integrate quaterions for each timestep using Madgwick algorithm
+            for t in range(1, len(self.gyro)):
+                # calculate attitude
+                Q[t] = integrator.updateIMU(Q[t-1], gyr=self.gyro[t], acc=self.accel[t])
+
+            # get position data
+            pos = get_positions(self.accel, self.dt)
+            
+            if(graph):
+                # convert quaternions to euler angles
+                euler = R.from_quat(Q).as_euler('xyz')
+                print(euler)
+
+                fig = plt.figure()
+                ax = fig.add_subplot(projection='3d')
+                ax.scatter(-pos[:,0], pos[:,1], pos[:,2])
+                ax.view_init(elev=-90, azim=90)
+                plt.xlabel("X")
+                plt.ylabel("Y")
+                plt.show()
+
+            return Q, pos
 
 
 # doubly integrate acceleration to get position
@@ -85,37 +117,7 @@ def get_positions(accel, dt):
     pos = integrate.cumtrapz(vel, dx=dt, axis=0, initial=0)
     return pos
 
-# integrate quaternion orientations and positions from an IMU frame
-def integrate_imus(a, graph=False):
-    for i in range(1, 10):
-        integrator = Madgwick(Dt=a.dt)
-        # example code provided by Python AHRS library
-        Q = np.tile([1., 0., 0., 0.], (len(a.gyro), 1)) # Allocate for quaternions
-        Q[0] = a.start_rot.as_quat() # Initial quaternion value 
-        # integrate quaterions for each timestep using Madgwick algorithm
-        for t in range(1, len(a.gyro)):
-            # calculate attitude
-            Q[t] = integrator.updateIMU(Q[t-1], gyr=a.gyro[t], acc=a.accel[t])
-
-        # get position data
-        pos = get_positions(a.accel, a.dt)
-        
-        if(graph):
-            # convert quaternions to euler angles
-            euler = R.from_quat(Q).as_euler('xyz')
-            print(euler)
-
-            fig = plt.figure()
-            ax = fig.add_subplot(projection='3d')
-            ax.scatter(-pos[:,0], pos[:,1], pos[:,2])
-            ax.view_init(elev=-90, azim=90)
-            plt.xlabel("X")
-            plt.ylabel("Y")
-            plt.show()
-
-        return Q, pos
-
 if __name__ == '__main__':
     for i in range(1, 10):
         a = IMUFrame("data/parse_test/", i)
-        Q, pos = integrate_imus(a, graph=True)
+        Q, pos = a.integrate_imus(graph=True)
