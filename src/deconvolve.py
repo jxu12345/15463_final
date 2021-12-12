@@ -2,18 +2,20 @@ import numpy as np
 import frame_processing as f
 from scipy.spatial.transform import Rotation as R
 from scipy.sparse import csr_matrix, lil_matrix
+from scipy.sparse.linalg import lsmr
+from skimage import io
 
 # focal distance of lens (in mm)
 d = 4.5
 
 # instrinsics matrix of the camera
-K = np.eye(3)
+
 
 # normal vector to the image plane
 N = np.array([[0, 0, 1]]).T
 
-#compute homography matrix for time t with given rot matrix and trans vector
-def calc_H_t(R_t, T_t):
+#compute homography matrix for time t with given rot matrix, trans vector and intrinsics matrix
+def calc_H_t(R_t, T_t, K):
     K_inv = np.linalg.inv(K) 
     # expand dims to adapt translation vector for matmul
     T_t = np.expand_dims(T_t, axis=-1)
@@ -106,27 +108,47 @@ def A_t_from_H_t(height, width, H_t):
 def get_A (frame):
     # get rotation and translation matrices
     Q, T = frame.integrate_imus()
+    # load camera intrinsics matrix
+    with np.load('data/calib.npz') as CALIB:
+        K = CALIB['mtx']
     # initialize warping matrix
     A = csr_matrix((frame.height*frame.width, frame.height*frame.width))
     # iterate over all timestamps
     for t in range(len(Q)):
         # get homography matrix
-        H_t = calc_H_t(R.from_quat(Q[t]).as_matrix(), T[t])
+        H_t = calc_H_t(R.from_quat(Q[t]).as_matrix(), T[t], K)
         # get warping matrix for current timestamp
         A += A_t_from_H_t(frame.height, frame.width, H_t)
         # add warping matrix to warping matrix
 
     return A
 
-if __name__ == "__main__":
-    # read test frame
-    frame = f.IMUFrame("data/parse_test/", 5, compression=4)
-    Q, pos = frame.integrate_imus()
+# solve for un-blurred image using regularized least squares with a tunable lambda
+def solve_I (A, b, l):
+    I = lsmr(A, b, damp=l)[0]
+    return I
 
+# function to deblur an image using IMU frame
+def deblur_image(frame):
+    lambda_ = 0.01
+    A = get_A(frame)
+    I = solve_I(A, frame.image, lambda_)
+    io.imshow(I)
+    io.show()
+
+# test function
+def test(frame):
+    Q, pos = frame.integrate_imus()
     # compute homography matrix for time 5
     H_t = calc_H_t(R.from_quat(Q[4]).as_matrix(), pos[4])
     print(H_t)
     print(np.linalg.inv(H_t) @ np.array([[180,210,1]]).T)
-    # compute warp matrix for time 5
+    # compute warp matrix
     # A_t = A_t_from_H_t(frame.height, frame.width, H_t)
     # print(A_t)
+
+if __name__ == "__main__":
+    # read test frame
+    frame = f.IMUFrame("data/parse_test/", 5, compression=4)
+    # do a function on frame
+    test(frame)
