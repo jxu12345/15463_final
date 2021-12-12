@@ -74,7 +74,7 @@ class IMUFrame():
         self.accel[:,1] -= mean_g
         # calculate rotation angle relative to ground, using first z axis value to check if pos or neg
         theta = np.arccos(-mean_g / g) * (-1 if self.accel[0,2] > 0 else 1)
-        # calculate amount to offset from orthogonal axis (z)
+        # calculate amount to offset from orthogonal axes
         self.accel[:,2] -= np.sin(theta) * g
         
         # calculate starting orientation
@@ -86,7 +86,7 @@ class IMUFrame():
             integrator = Madgwick(Dt=self.dt)
             # example code provided by Python AHRS library
             Q = np.tile([1., 0., 0., 0.], (len(self.gyro), 1)) # Allocate for quaternions
-            Q[0] = self.start_rot.as_quat() # Initial quaternion value 
+
             # integrate quaterions for each timestep using Madgwick algorithm
             for t in range(1, len(self.gyro)):
                 # calculate attitude
