@@ -1,7 +1,7 @@
 import numpy as np
 import frame_processing as f
 from scipy.spatial.transform import Rotation as R
-from scipy.sparse import csr_matrix, lil_matrix
+from scipy.sparse import base, csr_matrix, lil_matrix
 from scipy.sparse.linalg import lsmr
 from skimage import io
 
@@ -9,7 +9,10 @@ from skimage import io
 d = 4.5
 
 # instrinsics matrix of the camera
-
+focal = d * 1e3 / 1.6 * (4000/1920)
+base_intr = np.eye(3)
+base_intr[0,0] = focal
+base_intr[1,1] = focal
 
 # normal vector to the image plane
 N = np.array([[0, 0, 1]]).T
@@ -140,15 +143,19 @@ def deblur_image(frame):
 def test(frame):
     Q, pos = frame.integrate_imus()
     # compute homography matrix for time 5
-    H_t = calc_H_t(R.from_quat(Q[4]).as_matrix(), pos[4])
+    with np.load('data/calib.npz') as CALIB:
+        K = CALIB['mtx']
+    H_t = calc_H_t(R.from_quat(Q[4]).as_matrix(), pos[4], base_intr)
     print(H_t)
-    print(np.linalg.inv(H_t) @ np.array([[180,210,1]]).T)
+    print(H_t @ np.array([[180,210,1]]).T)
+    #print(np.linalg.inv(H_t) @ np.array([[180,210,1]]).T)
     # compute warp matrix
     # A_t = A_t_from_H_t(frame.height, frame.width, H_t)
     # print(A_t)
 
 if __name__ == "__main__":
     # read test frame
+    print(base_intr)
     frame = f.IMUFrame("data/parse_test/", 5, compression=4)
     # do a function on frame
     test(frame)
