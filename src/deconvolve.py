@@ -22,7 +22,7 @@ def calc_H_t(R_t, T_t, K):
     K_inv = np.linalg.inv(K) 
     # expand dims to adapt translation vector for matmul
     T_t = np.expand_dims(T_t, axis=-1)
-    return K @ (R_t + 1/d * (T_t @ N.T)) @ K_inv
+    return K @ (R_t + 1/focal * (T_t @ N.T)) @ K_inv
 
 # helper function to compute indices in a flattened array given u and v
 def get_arr_ind(u, v, w):
