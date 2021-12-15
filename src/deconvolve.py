@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.sparse import base, csr_matrix, lil_matrix
 from scipy.sparse.linalg import lsmr
 from skimage import io
+from matplotlib import pyplot as plt
 
 # focal distance of lens (in mm)
 d = 4.5
@@ -114,9 +115,26 @@ def test(frame):
     with np.load('data/calib.npz') as CALIB:
         K = CALIB['mtx']
         print(K)
-    H_t = calc_H_t(R.from_quat(Q[4]).as_matrix(), pos[4], K)
-    print(H_t)
-    warped_coords = np.array([[180,210,1]]).T
+    #print(R.from_quat(Q[50]).as_matrix())
+    #print(pos[50])
+    H_t = calc_H_t(R.from_quat(Q[50]).as_matrix(), pos[50], K)
+    #print(H_t)
+    '''u_vals = []
+    v_vals = []
+    for i in range(0,1921):
+        #print(i)
+        warped_coords = np.array([[i, 0, 1]]).T
+        transformed_coords = np.linalg.inv(H_t) @ warped_coords
+        u, _, _ = transformed_coords / transformed_coords[2]
+        u_vals.append(i)
+        v_vals.append(u)
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.scatter(u_vals, v_vals)
+    plt.xlabel("Warped U's")
+    plt.ylabel("Transformed U's")
+    plt.show()'''
+    warped_coords = np.array([[0,210,1]]).T
     transformed_coords = np.linalg.inv(H_t) @ warped_coords
     u, v, _ = transformed_coords / transformed_coords[2]
     print(u, v)
@@ -124,6 +142,6 @@ def test(frame):
 
 if __name__ == "__main__":
     # read test frame
-    frame = f.IMUFrame("data/parse_test/", 5, compression=4)
+    frame = f.IMUFrame("data/parse_test/", 3, compression=4)
     # do a function on frame
     test(frame)
